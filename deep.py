@@ -47,16 +47,6 @@ def data_augmentation():
     return datagen
 #end
 
-def fc_block(inputs, size, dropout):
-    x = layers.Dense(size, activation=None)(inputs)
-    x = layers.BatchNormalization()(x)
-    x = layers.Activation('relu')(x)
-    if (dropout > 0.0):
-        x = layers.Dropout(dropout)(x)
-    
-    return x
-#end
-
 def create_network(input_size,resnet_train):
     base_network = keras.applications.resnet.ResNet50(include_top=False, weights='imagenet', input_shape=(input_size[0],input_size[1],3), pooling=None)
     for layer in base_network.layers:
@@ -92,8 +82,6 @@ def get_accuracy(truths,preds):
 
     return accuracy/len(truths)
 #end
-
-
 
 if __name__ == "__main__":
     img_size = (100,100)

@@ -9,7 +9,7 @@ from helper_funcs.load_data import load
 from helper_funcs.show_image import show_image, compare_images
 
 def edge_detection(images,sigma,low_threshold,high_threshold):
-    #Detects edges for a list of images. returns a lsit of images with detected edges
+    #Detects edges for a list of images. returns a list of images with detected edges
     edges = []
     for image in images:
         edges.append(np.array(skimage.feature.canny(image=image,sigma=sigma,low_threshold=low_threshold,high_threshold=high_threshold)).flatten())
@@ -29,8 +29,8 @@ if __name__ == "__main__":
     # show_image(train[0],train[1],train[2],train[3],num_images=20)
 
     #Edge detection
-    train[0] = edge_detection(train[0],1,0.1,0.3)
-    test[0] = edge_detection(test[0],1,0.1,0.3)
+    train[0] = edge_detection(train[0],1,0.1,0.2)
+    test[0] = edge_detection(test[0],1,0.1,0.2)
 
     #Random forest prediction
     clf = svm.SVC()

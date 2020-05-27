@@ -24,13 +24,13 @@ if __name__ == "__main__":
     split = 0.7
     
     #Load training and testing set
-    train,test = load("rotated _scaled _grayscale_frames",img_size,colour,split)
+    train,test = load("grayscale_frames",img_size,colour,split)
     
     # show_image(train[0],train[1],train[2],train[3],num_images=20)
 
     #Edge detection
-    train[0] = edge_detection(train[0],1,0.1,0.3)
-    test[0] = edge_detection(test[0],1,0.1,0.3)
+    train[0] = edge_detection(train[0],10,0.00001,10.3)
+    test[0] = edge_detection(test[0],10,0.01,10.3)
 
     #Random forest prediction
     clf = RandomForestClassifier(max_depth=2, random_state=0)
