@@ -35,7 +35,7 @@ def load_images(dirpath,image_list,size,colour):
 
 def load(path,size,colour,split):
     #Load data with input values.
-    #The split value is the percentage of data that will be a testing and training set. given 0.7m, 70% will be training.
+    #The split value is the percentage of data that will be a testing and training set. given 0.7, 70% will be training.
     path = os.getcwd() + "\\data\\" + path
 
     for dirpath, dirnames, filenames in os.walk(path):
