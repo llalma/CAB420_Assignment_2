@@ -7,7 +7,6 @@ import keras.layers as layers
 from keras.callbacks import ModelCheckpoint
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from keras.utils import to_categorical
-from sklearn.metrics import classification_report
 
 #Helper functions
 from helper_funcs.load_data import load,show_splits
@@ -99,7 +98,7 @@ if __name__ == "__main__":
     embedding_size = 150
     resnet_train = True
     batch_size = 32
-    epochs = 100
+    epochs = 1
     colour = cv2.COLOR_BGR2RGB
     split = 0.7
     
@@ -123,9 +122,6 @@ if __name__ == "__main__":
     datagen = data_augmentation()
     history = deep_model.fit_generator(datagen.flow(train[0], train[1], batch_size=batch_size), epochs=epochs,validation_data = (test[0], test[1]),shuffle=True, callbacks=[checkpoint])
     preds = deep_model.predict(test[0])
-
-    #Imported accuracy.
-    print(classification_report(test[1], preds)) 
 
     #Top N acccuracy and CMC curve
     print(Top_N(test[1],preds,2))
