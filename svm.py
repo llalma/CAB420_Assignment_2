@@ -24,7 +24,7 @@ if __name__ == "__main__":
     split = 0.7
     
     #Load training and testing set
-    train,test = load("binary_frames",img_size,colour,split)
+    train,test = load("grayscale_frames",img_size,colour,split)
     
     # show_image(train[0],train[1],train[2],train[3],num_images=20)
 

@@ -11,6 +11,7 @@ from keras.utils import to_categorical
 #Helper functions
 from helper_funcs.load_data import load
 from helper_funcs.show_image import show_image
+from helper_funcs.evaluate import Top_N,CMC
 
 #Convert to float16 for faster execution. allows for traiing of the resenet
 from keras.backend.common import set_floatx
@@ -81,30 +82,41 @@ def create_network(input_size,resnet_train):
     return model
 #end
 
+def get_accuracy(truths,preds):
+    accuracy = 0
+    for true,pred in zip(truths,preds):
+        if true == pred:
+            accuracy+=1
+        #end
+    #end
+
+    return accuracy/len(truths)
+#end
+
 if __name__ == "__main__":
     img_size = (100,100)
     embedding_size = 150
-    resnet_train = False
+    resnet_train = True
     batch_size = 32
-    epochs = 100
+    epochs = 1
     colour = cv2.COLOR_BGR2RGB
     split = 0.7
     
     
     #Load training and testing set
-    train,test = load("original_frames",img_size,colour,split)
+    train,test = load("grayscale_frames",img_size,colour,split)
     train[1] = to_categorical(train[1])
     test[1] = to_categorical(test[1])
 
-    print(train[1].shape)
-
     checkpoint = ModelCheckpoint("temp.h5", verbose=2, monitor='val_loss', save_best_only=True, mode='auto')
     #Create model
-    deep_model = create_network(input_size=img_size,resnet_train=resnet_train)
+    # deep_model = create_network(input_size=img_size,resnet_train=resnet_train)
+    deep_model = keras.models.load_model("temp.h5")
 
     datagen = data_augmentation()
     history = deep_model.fit_generator(datagen.flow(train[0], train[1], batch_size=batch_size), epochs=epochs,validation_data = (test[0], test[1]),shuffle=True, callbacks=[checkpoint])
     preds = deep_model.predict(test[0])
 
-    print(preds[0:2])
+    print(Top_N(test[1],preds,2))
+    CMC(test[1],preds)
 #end

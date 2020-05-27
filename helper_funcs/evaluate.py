@@ -12,8 +12,7 @@ def Top_N(truth, probs,n):
 
         #The positions correspond to the labels predicted
         # topn_labels = np.concatenate(np.array(truth)[np.array(topn)]).tolist()
-
-        if int(truth[i]) in topn:
+        if truth[i].tolist().index(1) in topn:
             sum_total+=1
         #end
     #end
