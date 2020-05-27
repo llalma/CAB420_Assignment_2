@@ -3,6 +3,7 @@ from sklearn.ensemble import RandomForestClassifier
 import cv2
 import skimage.feature
 import matplotlib.pyplot as plt
+from sklearn.metrics import classification_report
 
 #Helper functions
 from helper_funcs.load_data import load
@@ -29,8 +30,8 @@ if __name__ == "__main__":
     # show_image(train[0],train[1],train[2],train[3],num_images=20)
 
     #Edge detection
-    train[0] = edge_detection(train[0],10,0.00001,10.3)
-    test[0] = edge_detection(test[0],10,0.01,10.3)
+    train[0] = edge_detection(train[0],2,0.1,0.3)
+    test[0] = edge_detection(test[0],2,0.1,0.3)
 
     #Random forest prediction
     clf = RandomForestClassifier(max_depth=2, random_state=0)
@@ -39,7 +40,10 @@ if __name__ == "__main__":
     #Predictions
     predicitons = clf.predict(test[0])
 
-    #Accuracy
+    #Imported accuracy.
+    print(classification_report(test[1], predicitons)) 
+
+    #Own Accuracy, for sanity check
     accuracy = 0
     for i in range(0,len(predicitons)):
         # print("Predicted: " + str(predicitons[i]) + " Acutal: " + str(test[1][i]))
@@ -47,5 +51,6 @@ if __name__ == "__main__":
     #end
     print("Accuracy: " + str(accuracy/len(predicitons)))
 
+    #Show the edge detected images with the actual and predicted values.
     compare_images(test[0],test[1],predicitons,test[3])
 #end

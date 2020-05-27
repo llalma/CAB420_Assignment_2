@@ -3,6 +3,8 @@ from sklearn import svm
 import cv2
 import skimage.feature
 import matplotlib.pyplot as plt
+from sklearn.model_selection import GridSearchCV 
+from sklearn.metrics import classification_report
 
 #Helper functions
 from helper_funcs.load_data import load
@@ -32,14 +34,21 @@ if __name__ == "__main__":
     train[0] = edge_detection(train[0],1,0.1,0.2)
     test[0] = edge_detection(test[0],1,0.1,0.2)
 
-    #Random forest prediction
-    clf = svm.SVC()
-    clf.fit(train[0], train[1])
+    #Hyper tuning.
+    param_grid = {'C': [0.1, 1, 10, 100, 1000],  
+                'gamma': [1, 0.1, 0.01, 0.001, 0.0001], 
+                'kernel': ['poly', 'rbf', 'sigmoid']}  
+    
+    grid = GridSearchCV(svm.SVC(), param_grid, refit = True, verbose = 3) 
+    grid.fit(train[0],train[1])
+    
+    print(grid.best_params_)
+    print(grid.best_estimator_)
 
     #Predictions
-    predicitons = clf.predict(test[0])
+    predicitons = grid.predict(test[0])
 
-    #Accuracy
+    #Own Accuracy, for sanity check
     accuracy = 0
     for i in range(0,len(predicitons)):
         # print("Predicted: " + str(predicitons[i]) + " Acutal: " + str(test[1][i]))
@@ -47,5 +56,6 @@ if __name__ == "__main__":
     #end
     print("Accuracy: " + str(accuracy/len(predicitons)))
 
+    #Show the edge detected images with the actual and predicted values.
     compare_images(test[0],test[1],predicitons,test[3])
 #end

@@ -7,6 +7,7 @@ import keras.layers as layers
 from keras.callbacks import ModelCheckpoint
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from keras.utils import to_categorical
+from sklearn.metrics import classification_report
 
 #Helper functions
 from helper_funcs.load_data import load,show_splits
@@ -45,6 +46,16 @@ def data_augmentation():
                             )
 
     return datagen
+#end
+
+def fc_block(inputs, size, dropout):
+    x = layers.Dense(size, activation=None)(inputs)
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation('relu')(x)
+    if (dropout > 0.0):
+        x = layers.Dropout(dropout)(x)
+
+    return x
 #end
 
 def create_network(input_size,resnet_train):
@@ -88,27 +99,35 @@ if __name__ == "__main__":
     embedding_size = 150
     resnet_train = True
     batch_size = 32
-    epochs = 1
+    epochs = 100
     colour = cv2.COLOR_BGR2RGB
     split = 0.7
     
     
     #Load training and testing set
     train,test = load("grayscale_frames",img_size,colour,split)
-    show_splits(train[1],test[1])
+
+
+    # show_splits(train[1],test[1])
+
+    #Convert the lables to categorial, e.g. 2 > [0,0,1,0] 
     train[1] = to_categorical(train[1])
     test[1] = to_categorical(test[1])
 
     
     checkpoint = ModelCheckpoint("temp.h5", verbose=2, monitor='val_loss', save_best_only=True, mode='auto')
     #Create model
-    # deep_model = create_network(input_size=img_size,resnet_train=resnet_train)
-    deep_model = keras.models.load_model("temp.h5")
+    deep_model = create_network(input_size=img_size,resnet_train=resnet_train)
+    # deep_model = keras.models.load_model("temp.h5")
 
     datagen = data_augmentation()
     history = deep_model.fit_generator(datagen.flow(train[0], train[1], batch_size=batch_size), epochs=epochs,validation_data = (test[0], test[1]),shuffle=True, callbacks=[checkpoint])
     preds = deep_model.predict(test[0])
 
+    #Imported accuracy.
+    print(classification_report(test[1], preds)) 
+
+    #Top N acccuracy and CMC curve
     print(Top_N(test[1],preds,2))
     CMC(test[1],preds)
 #end
