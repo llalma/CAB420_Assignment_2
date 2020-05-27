@@ -9,7 +9,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from keras.utils import to_categorical
 
 #Helper functions
-from helper_funcs.load_data import load
+from helper_funcs.load_data import load,show_splits
 from helper_funcs.show_image import show_image
 from helper_funcs.evaluate import Top_N,CMC
 
@@ -93,6 +93,8 @@ def get_accuracy(truths,preds):
     return accuracy/len(truths)
 #end
 
+
+
 if __name__ == "__main__":
     img_size = (100,100)
     embedding_size = 150
@@ -105,9 +107,11 @@ if __name__ == "__main__":
     
     #Load training and testing set
     train,test = load("grayscale_frames",img_size,colour,split)
+    show_splits(train[1],test[1])
     train[1] = to_categorical(train[1])
     test[1] = to_categorical(test[1])
 
+    
     checkpoint = ModelCheckpoint("temp.h5", verbose=2, monitor='val_loss', save_best_only=True, mode='auto')
     #Create model
     # deep_model = create_network(input_size=img_size,resnet_train=resnet_train)

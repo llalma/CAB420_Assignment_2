@@ -7,6 +7,7 @@ import os
 import numpy as np
 import random
 from collections import Counter
+import matplotlib.pyplot as plt
 
 def load_images(dirpath,image_list,size,colour):
     images = []
@@ -47,4 +48,37 @@ def load(path,size,colour,split):
     #end
 
     return train,test
+#end
+
+def show_splits(train,test):
+    """Shows the how much data is in each class."""
+    fig = plt.figure(figsize=[25, 6])
+    plt.suptitle("Data split for labels")
+
+    #Get counts of data
+    train_count = [0] * 24
+    test_count = train_count.copy()
+
+    for val in train:
+        train_count[val] +=1
+    #end
+    for val in test:
+        test_count[val] +=1
+    #end
+
+    #Training set
+    ax = fig.add_subplot(1,2,1)
+    ax.set_title("Training Data")
+    plt.bar(range(24),train_count)
+    ax.set_ylabel("Amount")
+    ax.set_xlabel("Label")
+
+    #Testing set
+    ax = fig.add_subplot(1,2,2)
+    ax.set_title("Testing Data")
+    plt.bar(range(24),test_count)
+    ax.set_ylabel("Amount")
+    ax.set_xlabel("Label")
+
+    plt.show()
 #end
