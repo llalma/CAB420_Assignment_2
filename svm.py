@@ -6,6 +6,10 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import GridSearchCV 
 from sklearn.metrics import classification_report
 
+from skimage.feature import hog
+from skimage import data, exposure
+
+
 #Helper functions
 from helper_funcs.load_data import load
 from helper_funcs.show_image import show_image, compare_images
@@ -20,19 +24,27 @@ def edge_detection(images,sigma,low_threshold,high_threshold):
 #end
 
 if __name__ == "__main__":
-    img_size = (100,100)
-    embedding_size = 100
-    colour = cv2.COLOR_BGR2GRAY
+    img_size = (200,200)
+    colour = cv2.COLOR_BGR2RGB
     split = 0.7
     
     #Load training and testing set
-    train,test = load("grayscale_frames",img_size,colour,split)
+    train,test = load("original_frames",img_size,colour,split)
     
     # show_image(train[0],train[1],train[2],train[3],num_images=20)
+    
+    #HOC
+    features_train = []
+    for img in train[0]:
+        # fd, hog_image = hog(img, orientations=9, pixels_per_cell=(4,4),cells_per_block=(3,3), visualize=True, multichannel=True)
+        features_train.append(hog(img, orientations=10, pixels_per_cell=(8,8),cells_per_block=(4,4), visualize=False, multichannel=True))
+    #end
 
-    #Edge detection
-    train[0] = edge_detection(train[0],1,0.1,0.2)
-    test[0] = edge_detection(test[0],1,0.1,0.2)
+    features_test = []
+    for img in test[0]:
+        # fd, hog_image = hog(img, orientations=9, pixels_per_cell=(4,4),cells_per_block=(3,3), visualize=True, multichannel=True)
+        features_test.append(hog(img, orientations=10, pixels_per_cell=(8,8),cells_per_block=(4,4), visualize=False, multichannel=True))
+    #end
 
     #Hyper tuning.
     param_grid = {'C': [0.1, 1, 10, 100, 1000],  
@@ -40,13 +52,13 @@ if __name__ == "__main__":
                 'kernel': ['poly', 'rbf', 'sigmoid']}  
     
     grid = GridSearchCV(svm.SVC(), param_grid, refit = True, verbose = 3) 
-    grid.fit(train[0],train[1])
+    grid.fit(features_train,train[1])
     
     print(grid.best_params_)
     print(grid.best_estimator_)
 
     #Predictions
-    predicitons = grid.predict(test[0])
+    predicitons = grid.predict(features_test)
 
     #Own Accuracy, for sanity check
     accuracy = 0

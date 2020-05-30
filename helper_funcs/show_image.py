@@ -25,7 +25,7 @@ def compare_images(images, true, pred, file_name, num_images=10, img_size=(100,1
     random_idx = random.sample(range(1, len(images)), num_images)
     fig = plt.figure(figsize=[25, 6])
 
-    images = np.array(images).reshape((len(pred),img_size[0],img_size[1]))
+    # images = np.array(images).reshape((len(pred),img_size[0],img_size[1]))
 
     #Plot number of images input
     for i,val in enumerate(random_idx):
