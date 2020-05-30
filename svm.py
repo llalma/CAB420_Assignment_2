@@ -47,9 +47,9 @@ if __name__ == "__main__":
     #end
 
     #Hyper tuning.
-    param_grid = {'C': [0.1, 1, 10, 100, 1000],  
-                'gamma': [1, 0.1, 0.01, 0.001, 0.0001], 
-                'kernel': ['poly', 'rbf', 'sigmoid']}  
+    param_grid = {'C': [0.1, 1, 100, 1000],  
+                'gamma': [1, 0.1, 0.001, 0.0001], 
+                'kernel': ['rbf']}  
     
     grid = GridSearchCV(svm.SVC(), param_grid, refit = True, verbose = 3) 
     grid.fit(features_train,train[1])
