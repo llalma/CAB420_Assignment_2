@@ -14,13 +14,18 @@ from skimage import data, exposure
 from helper_funcs.load_data import load
 from helper_funcs.show_image import show_image, compare_images
 
-def edge_detection(images,sigma,low_threshold,high_threshold):
-    #Detects edges for a list of images. returns a list of images with detected edges
-    edges = []
-    for image in images:
-        edges.append(np.array(skimage.feature.canny(image=image,sigma=sigma,low_threshold=low_threshold,high_threshold=high_threshold)).flatten())
+def hog_self(images):
+    #Converts a list of images to a hog representation. features is the feature vector and imgs_out is the visualsation of the hog.
+
+    features = []
+    imgs_out = []
+    for img in images:
+        fd, hog_image = hog(img, orientations=10, pixels_per_cell=(8,8),cells_per_block=(4,4), visualize=True, multichannel=True)
+        features.append(fd)
+        imgs_out.append(hog_image)
     #end
-    return edges
+    
+    return features,imgs_out
 #end
 
 if __name__ == "__main__":
@@ -31,21 +36,10 @@ if __name__ == "__main__":
     #Load training and testing set
     train,test = load("original_frames",img_size,colour,split)
     
-    # show_image(train[0],train[1],train[2],train[3],num_images=20)
+    #HOG
+    features_train,hog_train = hog_self(train[0])
+    features_test,hog_test = hog_self(test[0])
     
-    #HOC
-    features_train = []
-    for img in train[0]:
-        # fd, hog_image = hog(img, orientations=9, pixels_per_cell=(4,4),cells_per_block=(3,3), visualize=True, multichannel=True)
-        features_train.append(hog(img, orientations=10, pixels_per_cell=(8,8),cells_per_block=(4,4), visualize=False, multichannel=True))
-    #end
-
-    features_test = []
-    for img in test[0]:
-        # fd, hog_image = hog(img, orientations=9, pixels_per_cell=(4,4),cells_per_block=(3,3), visualize=True, multichannel=True)
-        features_test.append(hog(img, orientations=10, pixels_per_cell=(8,8),cells_per_block=(4,4), visualize=False, multichannel=True))
-    #end
-
     #Hyper tuning.
     param_grid = {'C': [0.1, 1, 100, 1000],  
                 'gamma': [1, 0.1, 0.001, 0.0001], 

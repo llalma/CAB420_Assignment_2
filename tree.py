@@ -13,13 +13,18 @@ from skimage import data, exposure
 from helper_funcs.load_data import load
 from helper_funcs.show_image import show_image, compare_images
 
-def edge_detection(images,sigma,low_threshold,high_threshold):
-    #Detects edges for a list of images. returns a lsit of images with detected edges
-    edges = []
-    for image in images:
-        edges.append(np.array(skimage.feature.canny(image=image,sigma=sigma,low_threshold=low_threshold,high_threshold=high_threshold)).flatten())
+def hog_self(images):
+    #Converts a list of images to a hog representation. features is the feature vector and imgs_out is the visualsation of the hog.
+
+    features = []
+    imgs_out = []
+    for img in images:
+        fd, hog_image = hog(img, orientations=10, pixels_per_cell=(8,8),cells_per_block=(4,4), visualize=True, multichannel=True)
+        features.append(fd)
+        imgs_out.append(hog_image)
     #end
-    return edges
+    
+    return features,imgs_out
 #end
 
 if __name__ == "__main__":
@@ -30,20 +35,11 @@ if __name__ == "__main__":
     #Load training and testing set
     train,test = load("original_frames",img_size,colour,split)
     
-    #HOC
-    features_train = []
-    for img in train[0]:
-        # fd, hog_image = hog(img, orientations=9, pixels_per_cell=(4,4),cells_per_block=(3,3), visualize=True, multichannel=True)
-        features_train.append(hog(img, orientations=10, pixels_per_cell=(8,8),cells_per_block=(4,4), visualize=False, multichannel=True))
-    #end
-
-    features_test = []
-    for img in test[0]:
-        # fd, hog_image = hog(img, orientations=9, pixels_per_cell=(4,4),cells_per_block=(3,3), visualize=True, multichannel=True)
-        features_test.append(hog(img, orientations=10, pixels_per_cell=(8,8),cells_per_block=(4,4), visualize=False, multichannel=True))
-    #end
+    #HOG
+    features_train,hog_train = hog_self(train[0])
+    features_test,hog_test = hog_self(test[0])
     
-    # # Create the parameter grid based on the results of random search 
+    # Create the parameter grid based on the results of random search 
     param_grid = {
         'bootstrap': [True],
         'max_depth': [2,200,1000],
@@ -54,29 +50,29 @@ if __name__ == "__main__":
     }
     print(param_grid)
 
-    # #Random forest prediction
+    #Random forest prediction
     rf = RandomForestClassifier()
     grid_search = GridSearchCV(estimator = rf, param_grid = param_grid,cv = 3, n_jobs = -1, verbose = 2)
-    grid_search.fit(features_train, train[1])
+    grid_search.fit(features_train[0], train[1])
     
     # Show best model 
     print(grid_search.best_params_)
     print(grid_search.best_estimator_)
 
-    # #Predictions
-    predicitons = grid_search.predict(features_test)
+    #Predictions
+    predictions = grid_search.predict(features_test[0])
 
-    # #Imported accuracy.
-    print(classification_report(test[1], predicitons)) 
+    #Imported accuracy.
+    print(classification_report(test[1], predictions)) 
 
-    # #Own Accuracy, for sanity check
+    #Own Accuracy, for sanity check
     accuracy = 0
-    for i in range(0,len(predicitons)):
+    for i in range(0,len(predictions)):
         # print("Predicted: " + str(predicitons[i]) + " Acutal: " + str(test[1][i]))
-        accuracy += predicitons[i] == test[1][i]
+        accuracy += predictions[i] == test[1][i]
     #end
-    print("Accuracy: " + str(accuracy/len(predicitons)))
+    print("Accuracy: " + str(accuracy/len(predictions)))
 
     # Show the edge detected images with the actual and predicted values.
-    compare_images(test[0],test[1],predicitons,test[3])
+    compare_images(test[0],test[1],predictions,test[3])
 #end

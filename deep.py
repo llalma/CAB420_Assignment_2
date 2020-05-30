@@ -102,10 +102,8 @@ if __name__ == "__main__":
     colour = cv2.COLOR_BGR2RGB
     split = 0.7
     
-    
     #Load training and testing set
     train,test = load("grayscale_frames",img_size,colour,split)
-
 
     # show_splits(train[1],test[1])
 
