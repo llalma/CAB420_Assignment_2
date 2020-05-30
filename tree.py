@@ -50,17 +50,19 @@ if __name__ == "__main__":
     }
     print(param_grid)
 
-    #Random forest prediction
-    rf = RandomForestClassifier()
-    grid_search = GridSearchCV(estimator = rf, param_grid = param_grid,cv = 3, n_jobs = -1, verbose = 2)
-    grid_search.fit(features_train[0], train[1])
-    
-    # Show best model 
+    #Non optimised model
+    # grid_search = RandomForestClassifier()
+    # grid_search.fit(features_train, train[1])
+
+    #Optimised model
+    grid_search = GridSearchCV(estimator = RandomForestClassifier(), param_grid = param_grid,cv = 3, n_jobs = -1, verbose = 2)
+    grid_search.fit(features_train, train[1])
     print(grid_search.best_params_)
     print(grid_search.best_estimator_)
 
+
     #Predictions
-    predictions = grid_search.predict(features_test[0])
+    predictions = grid_search.predict(features_test)
 
     #Imported accuracy.
     print(classification_report(test[1], predictions)) 

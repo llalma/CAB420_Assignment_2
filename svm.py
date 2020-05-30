@@ -45,9 +45,13 @@ if __name__ == "__main__":
                 'gamma': [1, 0.1, 0.001, 0.0001], 
                 'kernel': ['rbf']}  
     
+    #Non optimised model
+    # grid = svm.SVC()
+    # grid.fit(features_train,train[1])
+
+    #Optimised model
     grid = GridSearchCV(svm.SVC(), param_grid, refit = True, verbose = 3) 
-    grid.fit(features_train,train[1])
-    
+    grid.fit(features_train,train[1])  
     print(grid.best_params_)
     print(grid.best_estimator_)
 
