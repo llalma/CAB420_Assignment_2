@@ -12,6 +12,7 @@ from skimage import data, exposure
 #Helper functions
 from helper_funcs.load_data import load
 from helper_funcs.show_image import show_image, compare_images
+from helper_funcs.evaluate import Top_N,CMC
 
 def hog_self(images):
     #Converts a list of images to a hog representation. features is the feature vector and imgs_out is the visualsation of the hog.
@@ -50,15 +51,16 @@ if __name__ == "__main__":
     }
     print(param_grid)
 
-    #Non optimised model
-    # grid_search = RandomForestClassifier()
-    # grid_search.fit(features_train, train[1])
-
     #Optimised model
-    grid_search = GridSearchCV(estimator = RandomForestClassifier(), param_grid = param_grid,cv = 3, n_jobs = -1, verbose = 2)
+    grid_search = RandomForestClassifier(bootstrap=True,max_depth=200,max_features=6,min_samples_leaf=3,min_samples_split=10,n_estimators=1000)
+
+    #Find optimal model
+    # grid_search = GridSearchCV(estimator = RandomForestClassifier(), param_grid = param_grid,cv = 3, n_jobs = -1, verbose = 2)
+    
+    
     grid_search.fit(features_train, train[1])
-    print(grid_search.best_params_)
-    print(grid_search.best_estimator_)
+    # print(grid_search.best_params_)
+    # print(grid_search.best_estimator_)
 
 
     #Predictions
@@ -74,6 +76,14 @@ if __name__ == "__main__":
         accuracy += predictions[i] == test[1][i]
     #end
     print("Accuracy: " + str(accuracy/len(predictions)))
+
+    #Top N Accuracy and CMC
+    probs = grid_search.predict_proba(features_test)
+    print("Accuracy for top 1: " + str(Top_N(test[1],probs,1)))
+    print("Accuracy for top 3: " + str(Top_N(test[1],probs,3)))
+    print("Accuracy for top 5: " + str(Top_N(test[1],probs,5)))
+    CMC(test[1],probs)
+
 
     # Show the edge detected images with the actual and predicted values.
     compare_images(test[0],test[1],predictions,test[3])

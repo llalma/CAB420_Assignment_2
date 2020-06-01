@@ -13,6 +13,7 @@ from skimage import data, exposure
 #Helper functions
 from helper_funcs.load_data import load
 from helper_funcs.show_image import show_image, compare_images
+from helper_funcs.evaluate import Top_N,CMC
 
 def hog_self(images):
     #Converts a list of images to a hog representation. features is the feature vector and imgs_out is the visualsation of the hog.
@@ -50,10 +51,14 @@ if __name__ == "__main__":
     # grid.fit(features_train,train[1])
 
     #Optimised model
-    grid = GridSearchCV(svm.SVC(), param_grid, refit = True, verbose = 3) 
+    grid = svm.SVC(C=100,gamma=0.0001,kernel='rbf',probability=True)
+
+    #Find optimal model
+    # grid = GridSearchCV(svm.SVC(), param_grid, refit = True, verbose = 3) 
+
     grid.fit(features_train,train[1])  
-    print(grid.best_params_)
-    print(grid.best_estimator_)
+    # print(grid.best_params_)
+    # print(grid.best_estimator_)
 
     #Predictions
     predicitons = grid.predict(features_test)
@@ -65,6 +70,13 @@ if __name__ == "__main__":
         accuracy += predicitons[i] == test[1][i]
     #end
     print("Accuracy: " + str(accuracy/len(predicitons)))
+
+    #Top N Accuracy and CMC
+    probs = grid.predict_proba(features_test)
+    print("Accuracy for top 1: " + str(Top_N(test[1],probs,1)))
+    print("Accuracy for top 3: " + str(Top_N(test[1],probs,3)))
+    print("Accuracy for top 5: " + str(Top_N(test[1],probs,5)))
+    CMC(test[1],probs)
 
     #Show the edge detected images with the actual and predicted values.
     compare_images(test[0],test[1],predicitons,test[3])
