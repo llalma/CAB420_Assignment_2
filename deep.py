@@ -9,8 +9,8 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from keras.utils import to_categorical
 
 #Helper functions
-from helper_funcs.load_data import load,show_splits
-from helper_funcs.show_image import show_image
+from helper_funcs.load_data import load
+# from helper_funcs.show_image import show_image
 from helper_funcs.evaluate import Top_N,CMC
 
 #Convert to float16 for faster execution. allows for traiing of the resenet
@@ -58,24 +58,19 @@ def fc_block(inputs, size, dropout):
 #end
 
 def create_network(input_size,resnet_train):
-    base_network = keras.applications.resnet.ResNet50(include_top=False, weights='imagenet', input_shape=(input_size[0],input_size[1],3), pooling=None)
-    for layer in base_network.layers:
-        layer.trainable = resnet_train
-    #end
 
     inputs = keras.Input((input_size[0],input_size[1],3))
 
-    #base network is Resnet50
-    x = layers.MaxPooling2D()(base_network(inputs))
-    x = layers.Conv2D(filters=8,kernel_size=(1,1))(x)
-    x = layers.Conv2D(filters=16,kernel_size=(1,1))(x)
-    x = layers.Conv2D(filters=32,kernel_size=(1,1))(x)
-    x = fc_block(x,192,0.2)
-
+    x = layers.AveragePooling2D(name='sub1')(inputs)
+    x = layers.Conv2D(filters=16,kernel_size=(3,3),activation='relu',name='conv1')(x)
+    x = layers.AveragePooling2D(name='sub2')(x)
     x = layers.Flatten()(x)
-    output = layers.Dense(24,activation='softmax')(x)
+    x = layers.Dense(units=120,name='dense1', activation='relu')(x)
+    x = layers.Dense(units=84,name='dense2', activation='relu')(x)
 
-    model = keras.Model(inputs, output, name='Embedding')
+    output = layers.Dense(24,activation='softmax',name='output')(x)
+
+    model = keras.Model(inputs, output, name='LeNet')
 
     model.compile(loss='categorical_crossentropy',optimizer=keras.optimizers.Adam(),metrics=['accuracy'])
 
@@ -111,17 +106,59 @@ if __name__ == "__main__":
     train[1] = to_categorical(train[1])
     test[1] = to_categorical(test[1])
 
+    # fig = plt.figure()
+    # fig.add_subplot(3,1,1)
+    # plt.imshow(X_train[0])
+    # fig.add_subplot(3,1,2)
+    # plt.imshow(X_val[0])
+    # fig.add_subplot(3,1,3)
+    # plt.imshow(X_test[0])
+    # plt.show()
     
-    checkpoint = ModelCheckpoint("temp.h5", verbose=2, monitor='val_loss', save_best_only=True, mode='auto')
-    #Create model
-    deep_model = create_network(input_size=img_size,resnet_train=resnet_train)
-    # deep_model = keras.models.load_model("temp.h5")
+    ######## - Load Model - ########
+    deep_model = keras.models.load_model("temp.h5")
+    history=np.load('history.npy',allow_pickle='TRUE').item()
+    print(history.history.keys())
+    
+    ######## - Create Model - ########
+    # deep_model = create_network(input_size=img_size,resnet_train=resnet_train)
+    # deep_model.summary()
 
-    datagen = data_augmentation()
-    history = deep_model.fit_generator(datagen.flow(train[0], train[1], batch_size=batch_size), epochs=epochs,validation_data = (test[0], test[1]),shuffle=True, callbacks=[checkpoint])
-    preds = deep_model.predict(test[0])
+    # ####### - Trainining - ########
+    # ## Values of test and train np.array(images), np.array(labels), np.array(person), np.array(file_name) ###
+    # datagen = data_augmentation()
+    # checkpoint = ModelCheckpoint("temp.h5", verbose=2, monitor='val_loss', save_best_only=True, mode='auto')
+    # history = deep_model.fit_generator(datagen.flow(X_train, Y_train, batch_size=batch_size), epochs=epochs,validation_data = (X_val, Y_val),shuffle=True, callbacks=[checkpoint]) 
+    # np.save('history.npy',history) # Save history
+    # deep_model.save("temp.h5") # Save Model
+    # deep_model.load_weights("temp.h5")
 
-    #Top N acccuracy and CMC curve
-    print(Top_N(test[1],preds,2))
-    CMC(test[1],preds)
+    # Top N acccuracy and CMC Curve
+    preds = deep_model.predict(X_test)
+    Top5 = Top_N(Y_test,preds,1)
+    print('Top 5 Acc')
+    print(Top5)
+    CMC(Y_test,preds)
+
+    # Model Evaluation  eval_model(model, X_train, Y_train, X_test, Y_test, history)
+    test_accuracy, history, best_position, results = eval_model(deep_model, X_train, Y_train, X_test, Y_test, history)
+
+
+    best_accuracy = 0
+    if test_accuracy > best_accuracy:
+        best_accuracy = test_accuracy
+    
+    # Write model details to txt file!
+    f= open(os.getcwd() + "\\Model_Summary.txt","w+")
+    f.write(' Val_loss did not improve from: ' + str(history.history['val_loss'][best_position]) + ' At epoch No.' + str(best_position+1))
+    f.write(' \nFinal Loss:' + str(history.history['loss'][best_position]))
+    f.write(' \nFinal accuracy:' + str(history.history['accuracy'][best_position]))
+    f.write(' \nFinal val_accuracy:' + str(history.history['val_accuracy'][best_position]))
+    f.write(' \n Total epochs:' + str(len(history.history['val_loss'])))
+    f.write(' \n Top 5:' + str(Top5))
+    f.write("\n\n test loss and test acc:" + str(results))
+    deep_model.summary(print_fn = lambda x: f.write('\n\n'+ str(x)))
+    f.close() 
+    #end
+
 #end
